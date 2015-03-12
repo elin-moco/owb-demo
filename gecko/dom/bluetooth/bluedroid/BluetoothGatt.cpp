@@ -18,7 +18,7 @@
 #include "nsThreadUtils.h"
 #include "nsIObserver.h"
 
-//#define __DEBUG__
+#define __DEBUG__
 
 #define LOG_TAG "BluetoothGatt"
 
@@ -58,6 +58,7 @@
 #define HCI_EXT_INQ_RESPONSE_LEN        240
 #define BT_EIR_SHORTENED_LOCAL_NAME_TYPE    0x08
 #define BT_EIR_COMPLETE_LOCAL_NAME_TYPE     0x09
+#define BT_EIR_MANUFACTURER_SPECIFIC_TYPE   0xFF
 
 #define MAX_LEN_UUID_STR 37
 #define MAX_HEX_VAL_STR_LEN 100
@@ -65,6 +66,29 @@
 
 using namespace mozilla;
 USING_BLUETOOTH_NAMESPACE
+
+static uint8_t char2int(char input)
+{
+  if(input >= '0' && input <= '9')
+    return input - '0';
+  if(input >= 'A' && input <= 'F')
+    return input - 'A' + 10;
+  if(input >= 'a' && input <= 'f')
+    return input - 'a' + 10;
+  return 0;
+}
+
+// This function assumes src to be a zero terminated sanitized string with
+// an even number of [0-9a-f] characters, and target to be sufficiently large
+static void hex2bin(const char* src, uint8_t* tar)
+{
+  memset(tar, 0, sizeof(tar));
+  while(*src && src[1])
+  {
+    *(tar++) = char2int(*src)*16 + char2int(src[1]);
+    src += 2;
+  }
+}
 
 static inline void ntoh128(const bt_uuid_t *src, bt_uuid_t *dst)
 {
@@ -143,6 +167,29 @@ StringToUuid(nsAString& strUuid,
 }
 
 
+uint8_t *CheckBeaconData( uint8_t *p_eir, uint8_t type, uint8_t *p_length, char *str )
+{
+    uint8_t *p = p_eir;
+    p += 5;
+    uint8_t cid0;
+    uint8_t cid1;
+    uint8_t typ;
+    uint8_t len;
+    STREAM_TO_UINT8(cid0, p);
+    STREAM_TO_UINT8(cid1, p);
+    STREAM_TO_UINT8(typ, p);
+    STREAM_TO_UINT8(len, p);
+    LOGI("manufacturer_data: %02X %02X %02X %02X", cid0, cid1, typ, len);
+    LOGI("beacon_uuid: %02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X%02X%02X%02X%02X", 
+        p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15]);
+    if (0x4C == cid0 && 0x00 == cid1 && 0x02 == typ && 0x15 == len) {
+        sprintf(str, "iBeacon (%02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X%02X%02X%02X%02X)", 
+            p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15]);
+        *p_length = 46;
+        return (uint8_t *)str;
+    }
+    return NULL;
+}
 /*******************************************************************************
 **
 ** Function         BTM_CheckEirData
@@ -164,9 +211,11 @@ uint8_t *CheckEirData( uint8_t *p_eir, uint8_t type, uint8_t *p_length )
     LOGI("CheckEirData type=0x%02X", type);
 
     STREAM_TO_UINT8(length, p);
+    LOGI("CheckEirData length=%d", length);
     while( length && (p - p_eir <= HCI_EXT_INQ_RESPONSE_LEN))
     {
         STREAM_TO_UINT8(eir_type, p);
+        LOGI("CheckEirData eir_type=0x%02X", eir_type);
         if( eir_type == type )
         {
             /* length doesn't include itself */
@@ -175,6 +224,7 @@ uint8_t *CheckEirData( uint8_t *p_eir, uint8_t type, uint8_t *p_length )
         }
         p += length - 1; /* skip the length of data */
         STREAM_TO_UINT8(length, p);
+        LOGI("CheckEirData length=%d", length);
     }
 
     *p_length = 0;
@@ -1120,16 +1170,18 @@ bool BluetoothGatt::BluetoothGattOperate(uint32_t gattFunType, const nsTArray<ns
 
             NS_ConvertUTF16toUTF8 pDataValue(bleGattPara[11]);
             const char* p_src_value = pDataValue.get();
-            uint8_t value[MAX_HEX_DESCRIPTOR_VAL_STR_LEN];
+            LOGI("===== This is a test =====");
+            uint8_t p_tar_value[MAX_HEX_DESCRIPTOR_VAL_STR_LEN];
             len = strlen(p_src_value);
-            scan_field(p_src_value, len, value, sizeof(value));
+            hex2bin(p_src_value, p_tar_value);
+            LOGI("tar: %d,%d", p_tar_value[0], p_tar_value[1]);
+            LOGI("===== This is a test =====");
 
             len = (len + 1) / 2;
-
-            LOGI("WriteCharacteristic src_data:%s dest_data:%s len:%d write_type:%d auth_req:%d",p_src_value, value, len, write_type, auth_req);
+            LOGI("WriteCharacteristic src_data:%s dest_data:%s len:%d write_type:%d auth_req:%d",p_src_value, p_tar_value, len, write_type, auth_req);
 
             result = WriteDescriptor(mConnId, &mSrvcId, &mCharId, &mDescrId,
-                    write_type, len, auth_req, (char *)value);
+                    write_type, len, auth_req, (char *)p_tar_value);
             break;
         }
         case BleFunType_executeWrite:
@@ -1452,6 +1504,13 @@ BluetoothGatt::ProcessScanLEDevice(bt_bdaddr_t* bda, int rssi, uint8_t* adv_data
         p_eir_remote_name = CheckEirData(adv_data,
                 BT_EIR_SHORTENED_LOCAL_NAME_TYPE, &remote_name_len);
     }
+    if(p_eir_remote_name == NULL)
+    {
+        char str[46] = {0};
+        p_eir_remote_name = CheckBeaconData(adv_data,
+                BT_EIR_MANUFACTURER_SPECIFIC_TYPE, &remote_name_len, str);
+    }
+
     if(p_eir_remote_name)
     {
         memcpy(bdname.name, p_eir_remote_name, remote_name_len);
@@ -2901,7 +2960,7 @@ BluetoothGatt::SetAdvData(int server_if, bool set_scan_rsp, bool include_name,
 void
 BluetoothGatt::ProcessNotify(int conn_id, btgatt_notify_params_t *p_data)
 {
-    LOGI("callback ProcessReadRemoteRssi start");
+    LOGI("callback ProcessNotify start");
 
     mNotifyConnCommPara.connId = conn_id;
     memcpy(&mNotifyParaData, p_data, sizeof(btgatt_notify_params_t));
@@ -2921,7 +2980,7 @@ BluetoothGatt::SendNotifyCallback()
     nsString data_conn_id;
     data_conn_id.AppendInt(mNotifyConnCommPara.connId);
 
-    nsString data_value;
+//    nsString data_value;
 //    data_value.APpendInt(mNotifyParaData);
 
     nsString data_bdAddr;
@@ -2944,6 +3003,15 @@ BluetoothGatt::SendNotifyCallback()
 
     nsString data_is_notify;
     data_is_notify.AppendInt(mNotifyParaData.is_notify);
+
+    LOGI("^^^^^^^^^^^^^^^^^^^^^ btgatt_notify_params_t len:%d", mNotifyParaData.len);
+    nsString data_value;
+    char strValue[MAX_HEX_VAL_STR_LEN];
+    array2str(mNotifyParaData.value, mNotifyParaData.len, strValue, sizeof(strValue));
+
+    LOGI("############### strValue:%s", strValue);
+    data_value = NS_ConvertUTF8toUTF16(strValue);
+
 
     InfallibleTArray<BluetoothNamedValue> data;
     data.AppendElement(
@@ -2979,5 +3047,5 @@ BluetoothGatt::SendNotifyCallback()
     BluetoothSignal signal(eventName, NS_LITERAL_STRING(KEY_ADAPTER), data);
     SendCallbackSignal(signal);
 
-    LOGI("callback ProcessReadRemoteRssi end");
+    LOGI("callback ProcessNotify end");
 }
