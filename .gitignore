@@ -1,0 +1,13 @@
+*.py[co]
+*.sw[po]
+pip-log.txt
+docs/_gh-pages
+build
+.DS_Store
+*-min.css
+*-all.css
+*-min.js
+*-all.js
+.noseids
+tmp/*
+*~
