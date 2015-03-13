@@ -250,11 +250,11 @@ $(function () {
         }
         if (event.descr_id_uuid == CLIENT_CHARACTERISTIC_CONFIG_UUID) {
             descr_ccc_id = descr_id;
-            var descWritten = bleManager.writeDescriptor(conn_id, service_id, char_tx_id, descr_ccc_id, write_type, 4, auth_req, '0100');
-            console.info('writeDescriptor', descWritten);
+//            var descWritten = bleManager.writeDescriptor(conn_id, service_id, char_tx_id, descr_ccc_id, write_type, 4, auth_req, '0100');
+//            console.info('writeDescriptor', descWritten);
         }
         start_descr_id = descr_id;
-        keepAlive();
+//        keepAlive();
     }
 
     function keepAlive() {
@@ -293,10 +293,10 @@ $(function () {
         var pin = parseInt(characteristic.substr(0, 2), 16);
         var content = parseInt(characteristic.substr(2, 4), 16);
         if (pin == 0x0A) {
-            $('#switch').text((content == 0x0100) ? 'On' : 'Off');
+            $('#digital').text((content == 0x0100) ? 'On' : 'Off');
         }
         else if (pin == 0x0B) {
-            $('#proximity').text(content);
+            $('#analog').text(content);
         }
     }
 
@@ -472,7 +472,7 @@ $(function () {
         }
         console.info('writeDescriptor', descWritten);
     });
-    $('#led').change(function() {
+    $('#digital-out').change(function() {
         var charWritten;
         if($(this).is(':checked')) {
             charWritten = bleManager.writeCharacteristic(conn_id, service_id, char_rx_id, write_type, 6, auth_req, '010100');
@@ -487,7 +487,7 @@ $(function () {
         var charWritten = bleManager.writeCharacteristic(conn_id, service_id, char_rx_id, write_type, 6, auth_req, '03'+angle+'00');
         console.info('writeCharacteristic: ', charWritten);
     });
-    $('#proximity-sensor').change(function() {
+    $('#analog-in').change(function() {
         var charWritten;
         if($(this).is(':checked')) {
             charWritten = bleManager.writeCharacteristic(conn_id, service_id, char_rx_id, write_type, 6, auth_req, 'A00100');

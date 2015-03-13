@@ -10,7 +10,7 @@
     <div data-role="page" id="ble_page">
         <div data-role="header">
             <a id="back" data-role="button" data-icon="arrow-l" class="ui-btn-light" style="display: none">Back</a>
-            <h1 id="header">CatFeeder Demo</h1>
+            <h1 id="header">BleShield Demo</h1>
             <a id="search_service" data-role="button" class="ui-btn-right" style="display: none">SearchService</a>
         </div>
 
@@ -34,15 +34,27 @@
                 <span id="path"></span>
             </div>
             <button id="reset-device">Reset Device</button>
-            <label for="notification">Notification: </label>
-            <input id="notification" type="checkbox" checked>
-            <label for="led">LED: </label>
-            <input id="led" type="checkbox">
-            <label for="servo">Servo: </label>
-            <input id="servo" type="range" min="0" max="180">
-            <label for="proximity-sensor">Distance Sensor: <span id="proximity"></span></label>
-            <input id="proximity-sensor" type="checkbox">
-            <label>Switch: <span id="switch"></span></label>
+            <div class="ui-body ui-body-a">
+              <h3>Read</h3>
+              <label for="notification">Notification: </label>
+              <input id="notification" type="checkbox">
+              <label for="analog-in">Analog In: <span id="analog">0</span></label>
+              <input id="analog-in" type="checkbox">
+              <div class="ui-checkbox">
+                <label class="ui-btn ui-corner-all ui-btn-inherit">Digital In: <span id="digital">Off</span></label>
+              </div>
+            </div>
+            <br>
+            <div class="ui-body ui-body-a">
+              <h3>Write</h3>
+              <label for="digital-out">Digital Out: </label>
+              <input id="digital-out" type="checkbox">
+              <div class="ui-checkbox">
+                <label class="ui-btn ui-corner-all ui-btn-inherit">Servo:
+                  <input id="servo" type="range" min="0" max="180" value="0">
+                </label>
+              </div>
+            </div>
         </div>
 
         <div data-role="footer" class="ui-bar" id="footer_bar">
