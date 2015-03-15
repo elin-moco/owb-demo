@@ -289,7 +289,12 @@ $(function () {
         console.info("onNotify char_id_inst_id:" + event.char_id_inst_id);
         console.info("onNotify len:" + event.len);
         console.info("onNotify is_notify:" + event.is_notify);
-        var characteristic = event.value;
+        var characteristics = event.value.match(/.{1,6}/g);
+        for (var i = 0; i < characteristics.length; i++) {
+            showInput(characteristics[i]);
+        }
+    }
+    function showInput(characteristic) {
         var pin = parseInt(characteristic.substr(0, 2), 16);
         var content = parseInt(characteristic.substr(2, 4), 16);
         if (pin == 0x0A) {
