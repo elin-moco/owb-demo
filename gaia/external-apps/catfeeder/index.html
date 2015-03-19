@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width"/>
+    <link rel="stylesheet" href="jquery/jquery.mobile-1.4.3.css"/>
+    <link rel="stylesheet" href="css/confirm.css">
+</head>
+<body>
+    <div data-role="page" id="ble_page">
+        <div data-role="header">
+            <a id="back" data-role="button" data-icon="arrow-l" class="ui-btn-light" style="display: none">Back</a>
+            <h1 id="header">CatFeeder Demo</h1>
+            <a id="search_service" data-role="button" class="ui-btn-right" style="display: none">SearchService</a>
+        </div>
+
+        <div id="list_content" data-role="content">
+            <ul data-role="listview" id="device_list" data-inset="true">
+            </ul>
+        </div>
+
+        <div id="device_content" data-role="content" style="display: none">
+            <h2 id="connect_state">connecting...</h2>
+            <div data-role="footer" class="ui-bar"></div>
+            <div id="connect_device">
+                <h3>Device:</h3>
+                <p><b>name: </b><span id="device_name">unknown</span></p>
+                <p><b>address: </b><span id="device_address">unknown</span></p>
+                <p><b>rssi: </b><span id="device_rssi">unknown</span></p>
+                <p><b>type: </b><span id="device_type">unknown</span></p>
+            </div>
+
+            <div data-role="footer" class="ui-bar">
+                <span id="path"></span>
+            </div>
+            <button id="reset-device">Reset Device</button>
+            <div class="ui-body ui-body-a">
+              <h3>Read</h3>
+              <label for="notification">Notification: </label>
+              <input id="notification" type="checkbox">
+              <label for="analog-in">Analog In: <span id="analog">0</span></label>
+              <input id="analog-in" type="checkbox">
+              <div class="ui-checkbox">
+                <label class="ui-btn ui-corner-all ui-btn-inherit">Digital In: <span id="digital">Off</span></label>
+              </div>
+            </div>
+            <br>
+            <div class="ui-body ui-body-a">
+              <h3>Write</h3>
+              <label for="digital-out">Digital Out: </label>
+              <input id="digital-out" type="checkbox">
+              <div class="ui-checkbox">
+                <label class="ui-btn ui-corner-all ui-btn-inherit">Servo:
+                  <input id="servo" type="range" min="0" max="180" value="0">
+                </label>
+              </div>
+            </div>
+        </div>
+
+        <div data-role="footer" class="ui-bar" id="footer_bar">
+            <button id="search">search</button>
+        </div>
+    </div>
+</body>
+<script src="jquery/jquery-1.9.1.js"></script>
+<script src="jquery/jquery.mobile-1.4.3.js"></script>
+<script src="js/ble_gatt_client_control.js"></script>
+<script src="js/lib/dialog.js"></script>
+<script src="js/lib/loger.js"></script>
+<script src="js/ble_demo.js"></script>
+</html>
