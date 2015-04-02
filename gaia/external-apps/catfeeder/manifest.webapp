@@ -4,6 +4,7 @@
     "default_locale": "en",
     "version": "1.0",
     "launch_path": "/index.html",
+    "origin": "app://catfeeder.inspire.mozilla.com.tw",
     "icons": {
       "16": "/img/icon_16.png",
       "48": "/img/icon_48.png",
@@ -11,6 +12,7 @@
     },
     "type": "certified",
     "permissions": {
+      "video-capture": {},
       "bluetooth":{},
       "settings":{ "access": "readwrite" }
     }

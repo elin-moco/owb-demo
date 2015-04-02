@@ -1,6 +1,5 @@
 'use strict';
 
-$(function () {
 
     var BLESHIELD_SERVICE_UUID = "713D0000-503E-4C75-BA94-3148F18D941E".toLowerCase();
     var BLESHIELD_TX_UUID = "713D0002-503E-4C75-BA94-3148F18D941E".toLowerCase();
@@ -289,20 +288,11 @@ $(function () {
         console.info("onNotify char_id_inst_id:" + event.char_id_inst_id);
         console.info("onNotify len:" + event.len);
         console.info("onNotify is_notify:" + event.is_notify);
-        var characteristics = event.value.match(/.{1,6}/g);
-        for (var i = 0; i < characteristics.length; i++) {
-            showInput(characteristics[i]);
-        }
-    }
-
-    function showInput(characteristic) {
-        var pin = parseInt(characteristic.substr(0, 2), 16);
-        var content = parseInt(characteristic.substr(2, 4), 16);
-        if (pin == 0x0A) {
-            $('#digital').text((content == 0x0100) ? 'On' : 'Off');
-        }
-        else if (pin == 0x0B) {
-            $('#analog').text(content);
+        if (window.showBleInput) {
+            var characteristics = event.value.match(/.{1,6}/g);
+            for (var i = 0; i < characteristics.length; i++) {
+                window.showBleInput(characteristics[i]);
+            }
         }
     }
 
@@ -514,4 +504,3 @@ $(function () {
       return number + ""; // always return a string
     }
 
-});
